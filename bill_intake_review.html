@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}Review uploaded bill · Accounts payable{% endblock %}
+{% block content %}
+<h1>Review uploaded bill</h1>
+<p class="muted">Confirm every value before saving. Local extraction is a convenience only; this creates a draft, not a payable bill.</p>
+<div class="card">
+  <p><strong>Original:</strong> <a href="{% url 'accounting:bill_intake_original_download' intake.pk %}">{{ intake.filename }}</a></p>
+  <p class="muted">Extraction status: {{ intake.get_extraction_status_display }}{% if intake.extraction_error %} · {{ intake.extraction_error }}{% endif %}</p>
+  {% if detected_total %}<p class="muted">Detected subtotal: ${{ detected_subtotal|default:"—" }} · detected total: ${{ detected_total }}</p>{% endif %}
+</div>
+{% if vendor_draft_form %}
+<div class="card">
+  <h2>Vendor draft from upload</h2>
+  <p class="muted">No unambiguous existing vendor was found. Review this editable draft and save it only if it is correct. Saving creates a vendor; it does not create a bill.</p>
+  <form method="post" action="{% url 'accounting:bill_intake_vendor_draft' intake.pk %}">{% csrf_token %}
+    <div class="detail-grid">
+      {% for field in vendor_draft_form %}{% if field.is_hidden %}{{ field }}{% else %}<div><label for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{% if field.help_text %}<span class="muted">{{ field.help_text }}</span>{% endif %}{% for error in field.errors %}<div class="form-errors">{{ error }}</div>{% endfor %}</div>{% endif %}{% endfor %}
+    </div>
+    <button type="submit">Save vendor draft</button>
+  </form>
+</div>
+{% endif %}
+<form method="post">{% csrf_token %}
+  <div class="card detail-grid">
+    {% for field in form %}
+      {% if field.is_hidden %}{{ field }}{% else %}<div><label for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{% if field.help_text %}<span class="muted">{{ field.help_text }}</span>{% endif %}{% for error in field.errors %}<div class="form-errors">{{ error }}</div>{% endfor %}</div>{% endif %}
+    {% endfor %}
+  </div>
+  <p class="muted">{% if matched_vendor %}Vendor matched or was saved from this upload; confirm it below. You can choose a different existing vendor.{% else %}Choose an existing vendor to continue, or save the vendor draft above after review.{% endif %}</p>
+  <div class="card">
+    <h2>Bill lines</h2>
+    {{ formset.management_form }}
+    <div id="bill-lines">
+      {% for line in formset %}
+        <div class="detail-grid bill-line" style="margin-bottom:1rem;">
+          {% for hidden in line.hidden_fields %}{{ hidden }}{% endfor %}
+          {% for field in line.visible_fields %}<div><label for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{% for error in field.errors %}<div class="form-errors">{{ error }}</div>{% endfor %}</div>{% endfor %}
+        </div>
+      {% endfor %}
+    </div>
+    <template id="empty-line"><div class="detail-grid bill-line" style="margin-bottom:1rem;">{% for hidden in formset.empty_form.hidden_fields %}{{ hidden }}{% endfor %}{% for field in formset.empty_form.visible_fields %}<div><label for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}</div>{% endfor %}</div></template>
+    <button type="button" id="add-line">Add line</button>
+    {% for error in formset.non_form_errors %}<div class="form-errors">{{ error }}</div>{% endfor %}
+  </div>
+  <button type="submit">Create draft bill</button> <a href="{% url 'accounting:bill_list' %}">Cancel</a>
+</form>
+<script>
+  document.getElementById("add-line").addEventListener("click", function () {
+    const total = document.getElementById("id_lines-TOTAL_FORMS");
+    const line = document.getElementById("empty-line").innerHTML.replaceAll("__prefix__", total.value);
+    document.getElementById("bill-lines").insertAdjacentHTML("beforeend", line);
+    total.value = Number(total.value) + 1;
+  });
+</script>
+{% endblock %}

@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Bill {{ bill.bill_number|default:bill.pk }} · Accounts payable{% endblock %}
+{% block content %}
+<div style="display:flex; justify-content:space-between; gap:1rem; align-items:center;">
+  <div><h1>{{ bill.vendor }} · {{ bill.bill_number|default:"Draft bill" }}</h1><p class="muted">{{ bill.description|default:"No description" }}</p></div>
+  <span class="badge {{ bill.status }}">{{ bill.get_status_display }}</span>
+</div>
+<div class="card detail-grid">
+  <div><span class="muted">Invoice date</span><br>{{ bill.invoice_date }}</div><div><span class="muted">Due date</span><br>{{ bill.due_date }}</div>
+  <div><span class="muted">Total</span><br><strong>${{ bill.total|floatformat:2 }}</strong></div><div><span class="muted">Paid</span><br>${{ bill.amount_paid|floatformat:2 }}</div>
+  <div><span class="muted">Balance</span><br><strong>${{ bill.balance_due|floatformat:2 }}</strong></div><div><span class="muted">Created by</span><br>{{ bill.created_by }}</div>
+</div>
+<div class="card"><h2>Lines</h2><table><thead><tr><th>Description</th><th>Quantity</th><th>Unit price</th><th>Total</th></tr></thead><tbody>{% for line in bill.lines.all %}<tr><td>{{ line.description }}</td><td>{{ line.quantity }}</td><td>${{ line.unit_price|floatformat:2 }}</td><td>${{ line.line_total|floatformat:2 }}</td></tr>{% endfor %}<tr><th colspan="3">Subtotal + tax</th><th>${{ bill.subtotal|floatformat:2 }} + ${{ bill.tax|floatformat:2 }}</th></tr></tbody></table></div>
+{% if bill.status == "draft" %}<div class="card"><h2>Draft bill</h2><p class="muted">Vendor, invoice details, tax, and bill lines can be changed before submission.</p><a class="button-link" href="{% url 'accounting:bill_edit' bill.pk %}">Edit draft bill</a> <form method="post" action="{% url 'accounting:bill_submit' bill.pk %}" style="display:inline-block;">{% csrf_token %}<button type="submit">Submit bill</button></form></div>{% endif %}
+{% if bill.status == "submitted" %}<div class="card"><h2>Approval</h2>
+  {% if bill.created_by_id != user.id %}<form method="post" action="{% url 'accounting:bill_approve' bill.pk %}" style="display:inline-block;">{% csrf_token %}<button type="submit">Approve bill</button></form>
+  <form method="post" action="{% url 'accounting:bill_reject' bill.pk %}" style="margin-top:1rem;">{% csrf_token %}{% for field in reject_form %}<label for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{% endfor %}<button type="submit">Reject bill</button></form>
+  {% else %}<p class="muted">A different staff member must approve or reject this bill.</p>{% endif %}
+</div>{% endif %}
+{% if payment_form %}<div class="card"><h2>Record payment</h2><p class="muted">The amount defaults to the remaining balance, and the date and method are prefilled. Generated payment numbers can be changed. Processed payments are tracking records only and do not move money.</p><form method="post" action="{% url 'accounting:payment_create' %}">{% csrf_token %}{% for field in payment_form %}{% if field.is_hidden %}{{ field }}{% else %}<div style="margin-bottom:.75rem;"><label for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{% if field.help_text %}<span class="muted">{{ field.help_text }}</span>{% endif %}{% for error in field.errors %}<div class="form-errors">{{ error }}</div>{% endfor %}</div>{% endif %}{% endfor %}<button type="submit">Save payment</button></form></div>{% endif %}
+<div class="card"><h2>Attachments</h2><form method="post" enctype="multipart/form-data" action="{% url 'accounting:bill_attachment_upload' bill.pk %}">{% csrf_token %}<label for="{{ attachment_form.file.id_for_label }}">Private attachment</label>{{ attachment_form.file }} <button type="submit">Upload</button></form><ul>{% for attachment in bill.attachments.all %}<li><a href="{% url 'accounting:attachment_download' attachment.pk %}">{{ attachment.original_name }}</a> <span class="muted">uploaded {{ attachment.uploaded_at|date:"Y-m-d" }}</span></li>{% empty %}<li class="muted">No attachments.</li>{% endfor %}</ul></div>
+{% if bill.rejection_reason %}<div class="card"><h2>Rejection</h2><p>{{ bill.rejection_reason }}</p></div>{% endif %}
+{% endblock %}

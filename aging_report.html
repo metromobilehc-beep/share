@@ -1,0 +1,6 @@
+{% extends "base.html" %}
+{% block title %}Aging report · Accounts payable{% endblock %}
+{% block content %}
+<h1>Aging report</h1><p class="muted">Outstanding approved bills, grouped by due date.</p>
+{% for row in rows %}<div class="card"><h2>{{ row.label }} <span class="muted" style="font-size:1rem;">${{ row.total|floatformat:2 }}</span></h2><table><thead><tr><th>Vendor</th><th>Bill</th><th>Due date</th><th>Balance</th></tr></thead><tbody>{% for bill in row.bills %}<tr><td>{{ bill.vendor }}</td><td><a href="{% url 'accounting:bill_detail' bill.pk %}">{{ bill.bill_number|default:bill.pk }}</a></td><td>{{ bill.due_date }}</td><td>${{ bill.balance_due|floatformat:2 }}</td></tr>{% empty %}<tr><td colspan="4" class="muted">None.</td></tr>{% endfor %}</tbody></table></div>{% endfor %}
+{% endblock %}

@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% block title %}Payments · Accounts payable{% endblock %}
+{% block content %}
+<h1>Payments</h1><p class="muted">Recorded AP activity only; no payment processor or bank transfer is connected.</p>
+<div class="card"><table><thead><tr><th>Number</th><th>Vendor</th><th>Date</th><th>Method</th><th>Amount</th><th>Status</th><th></th></tr></thead><tbody>
+{% for payment in payments %}<tr><td>{{ payment.payment_number }}</td><td>{{ payment.vendor }}</td><td>{{ payment.payment_date }}</td><td>{{ payment.get_method_display }}</td><td>${{ payment.amount|floatformat:2 }}</td><td><span class="badge {{ payment.status }}">{{ payment.get_status_display }}</span></td><td>{% if payment.status == "scheduled" %}<a href="{% url 'accounting:payment_edit' payment.pk %}">Edit</a>{% endif %}{% if payment.status != "void" %}<form method="post" action="{% url 'accounting:payment_void' payment.pk %}" style="display:inline-block;">{% csrf_token %}<button type="submit">Void</button></form>{% endif %}</td></tr>{% empty %}<tr><td colspan="7" class="muted">No payments recorded.</td></tr>{% endfor %}
+</tbody></table></div>
+{% endblock %}

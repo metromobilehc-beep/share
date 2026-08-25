@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}Upload bill · Accounts payable{% endblock %}
+{% block content %}
+<h1>Upload bill</h1>
+<p class="muted">Your file stays on this system. Extraction is local only and creates a draft for review, never a payable bill.</p>
+<form method="post" enctype="multipart/form-data">
+  {% csrf_token %}
+  <div class="card">
+    <label for="{{ form.original_file.id_for_label }}">Invoice or bill file</label>
+    {{ form.original_file }}
+    {% for error in form.original_file.errors %}<div class="form-errors">{{ error }}</div>{% endfor %}
+    <p class="muted">PDF, DOCX, PNG, or JPEG · maximum 15 MB. Scanned images require local Tesseract OCR.</p>
+  </div>
+  <button type="submit">Extract and review</button> <a href="{% url 'accounting:bill_list' %}">Cancel</a>
+</form>
+{% endblock %}

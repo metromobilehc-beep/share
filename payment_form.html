@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}Edit scheduled payment · Accounts payable{% endblock %}
+{% block content %}
+<h1>Edit scheduled payment</h1>
+<p class="muted">Only scheduled payments can be edited. Processed payment history remains immutable and can only be voided.</p>
+<form method="post" class="card">{% csrf_token %}
+  {% for field in form %}<div style="margin-bottom:.75rem;"><label for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{% for error in field.errors %}<div class="form-errors">{{ error }}</div>{% endfor %}</div>{% endfor %}
+  <button type="submit">Save changes</button> <a href="{% url 'accounting:payment_list' %}">Cancel</a>
+</form>
+{% endblock %}

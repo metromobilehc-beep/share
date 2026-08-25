@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Accounts payable · Credentialing Platform{% endblock %}
+{% block content %}
+<div style="display:flex; justify-content:space-between; gap:1rem; align-items:center; margin-bottom:1.25rem;">
+  <div><h1>Accounts payable</h1><p class="muted">Track vendor bills, independent approvals, and recorded payments.</p></div>
+  <div><a class="button-link" href="{% url 'accounting:bill_intake_upload' %}">Upload bill</a> <a href="{% url 'accounting:bill_create' %}">Add manually</a></div>
+</div>
+<div class="detail-grid">
+  <div class="card"><strong>{{ draft_count }}</strong><p class="muted">Draft bills · ${{ draft_total|floatformat:2 }}</p></div>
+  <div class="card"><strong>{{ awaiting_count }}</strong><p class="muted">Awaiting approval · ${{ awaiting_total|floatformat:2 }}</p></div>
+  <div class="card"><strong>${{ overdue|floatformat:2 }}</strong><p class="muted">Overdue</p></div>
+  <div class="card"><strong>${{ approved_unpaid|floatformat:2 }}</strong><p class="muted">Approved, unpaid</p></div>
+</div>
+<div class="card">
+  <h2>Upcoming obligations</h2>
+  <div class="detail-grid">
+    <div><strong>${{ due_7|floatformat:2 }}</strong><p class="muted">Due in 7 days</p></div>
+    <div><strong>${{ due_30|floatformat:2 }}</strong><p class="muted">Due in 30 days</p></div>
+  </div>
+  <p><a href="{% url 'accounting:aging_report' %}">View aging report</a> · <a href="{% url 'accounting:payment_list' %}">View payments</a></p>
+</div>
+{% endblock %}

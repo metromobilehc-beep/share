@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}{% if is_edit %}Edit draft bill{% else %}Add bill{% endif %} · Accounts payable{% endblock %}
+{% block content %}
+<h1>{% if is_edit %}Edit draft bill{% else %}Add bill{% endif %}</h1>
+<p class="muted">Save as a draft first; the total is calculated from bill lines plus tax. Generated reference values can be changed before saving.</p>
+<form method="post">{% csrf_token %}
+  <div class="card detail-grid">
+    {% for field in form %}{% if field.is_hidden %}{{ field }}{% else %}<div><label for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{% if field.help_text %}<span class="muted">{{ field.help_text }}</span>{% endif %}{% for error in field.errors %}<div class="form-errors">{{ error }}</div>{% endfor %}</div>{% endif %}{% endfor %}
+  </div>
+  <div class="card">
+    <h2>Bill lines</h2>{{ formset.management_form }}
+    {% for line in formset %}
+      <div class="detail-grid" style="margin-bottom:1rem;">
+        {% for hidden in line.hidden_fields %}{{ hidden }}{% endfor %}
+        {% for field in line.visible_fields %}<div><label for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{% for error in field.errors %}<div class="form-errors">{{ error }}</div>{% endfor %}</div>{% endfor %}
+      </div>
+    {% endfor %}
+    {% for error in formset.non_form_errors %}<div class="form-errors">{{ error }}</div>{% endfor %}
+  </div>
+  <button type="submit">{% if is_edit %}Save changes{% else %}Save draft{% endif %}</button> <a href="{% url 'accounting:bill_list' %}">Cancel</a>
+</form>
+{% endblock %}

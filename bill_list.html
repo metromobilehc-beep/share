@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Bills · Accounts payable{% endblock %}
+{% block content %}
+<div style="display:flex; justify-content:space-between; gap:1rem; align-items:center;">
+  <div><h1>Bills</h1><p class="muted">Bills require approval by someone other than their creator.</p></div>
+  <div><a class="button-link" href="{% url 'accounting:bill_intake_upload' %}">Upload bill</a> <a href="{% url 'accounting:bill_create' %}">Add manually</a></div>
+</div>
+<form class="card filters" method="get">
+  <div><label for="status">Status</label><select id="status" name="status"><option value="">All statuses</option>{% for value,label in status_choices %}<option value="{{ value }}" {% if request.GET.status == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
+  <div><label for="vendor">Vendor</label><select id="vendor" name="vendor"><option value="">All vendors</option>{% for item in vendors %}<option value="{{ item.pk }}" {% if request.GET.vendor == item.pk|stringformat:"s" %}selected{% endif %}>{{ item }}</option>{% endfor %}</select></div>
+  <div><label for="due">Due date</label><select id="due" name="due"><option value="">Any time</option><option value="overdue">Overdue</option><option value="7">Next 7 days</option><option value="30">Next 30 days</option></select></div>
+  <div style="align-self:end;"><button type="submit">Filter</button></div>
+</form>
+<div class="card"><table>
+  <thead><tr><th>Vendor</th><th>Bill</th><th>Due</th><th>Total</th><th>Balance</th><th>Status</th></tr></thead>
+  <tbody>{% for bill in bills %}<tr>
+    <td>{{ bill.vendor }}</td><td><a href="{% url 'accounting:bill_detail' bill.pk %}">{{ bill.bill_number|default:bill.pk }}</a></td>
+    <td>{{ bill.due_date }}</td><td>${{ bill.total|floatformat:2 }}</td><td>${{ bill.balance_due|floatformat:2 }}</td>
+    <td><span class="badge {{ bill.status }}">{{ bill.get_status_display }}</span></td>
+  </tr>{% empty %}<tr><td colspan="6" class="muted">No bills match these filters.</td></tr>{% endfor %}</tbody>
+</table></div>
+{% endblock %}

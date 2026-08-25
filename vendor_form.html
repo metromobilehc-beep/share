@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block title %}{% if is_edit %}Edit vendor{% else %}Add vendor{% endif %} · Accounts payable{% endblock %}
+{% block content %}
+<h1>{% if is_edit %}Edit vendor{% else %}Add vendor{% endif %}</h1>
+<form method="post" class="card">{% csrf_token %}
+  {% for field in form %}
+   {% if field.is_hidden %}{{ field }}{% else %}<div style="margin-bottom:1rem;"><label for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{% if field.help_text %}<span class="muted">{{ field.help_text }}</span>{% endif %}{% for error in field.errors %}<div class="form-errors">{{ error }}</div>{% endfor %}</div>{% endif %}
+  {% endfor %}
+  <button type="submit">{% if is_edit %}Save changes{% else %}Save vendor{% endif %}</button> <a href="{% url 'accounting:vendor_list' %}">Cancel</a>
+</form>
+{% endblock %}
