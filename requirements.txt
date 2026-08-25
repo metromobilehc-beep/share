@@ -1,0 +1,7 @@
+Django==6.0.7
+django-import-export
+cryptography
+pypdf
+python-docx
+pytesseract
+Pillow
